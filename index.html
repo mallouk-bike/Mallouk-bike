@@ -786,7 +786,6 @@
 
     // --- المشاركة ---
     function shareBike(name) {
-      let baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
       let shareUrl = baseUrl + "?bike=" + encodeURIComponent(name);
       document.getElementById('share-popup').classList.add('active');
       document.getElementById('share-overlay').classList.add('active');
