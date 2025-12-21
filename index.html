@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title> Mallouk Bike </title>
+  <title>مالوك بايك – أفضل الدراجات</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href='data:application/manifest+json,{
     "name":"Mallouk Bike",
@@ -26,26 +26,19 @@
       }
     ]
   }'>
-
-  <!-- ====== ICÔNES ANDROID / SAMSUNG / NAVIGATEUR ====== -->
   <link rel="icon" href="https://i.postimg.cc/kgrvnzGZ/image-2-Photoroom.png">
   <link rel="icon" sizes="192x192" href="https://i.postimg.cc/kgrvnzGZ/image-2-Photoroom.png">
   <link rel="apple-touch-icon" href="https://i.postimg.cc/kgrvnzGZ/image-2-Photoroom.png">
   <meta name="theme-color" content="#34d399">
-
-  <!-- ====== FONTS & ICONS ====== -->
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;600;500;400&family=Almarai:wght@700;600;400&family=Tajawal:wght@700;500;400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  <!-- خطوط عربية مناسبة -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;600;500;400&family=Almarai:wght@700;600;400&family=Tajawal:wght@700;500;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     :root {
-      --gradient: linear-gradient(90deg,#5eead4 0%,#34d399 100%);
-      --glass-bg: rgba(255,255,255,0.4);
+      --gradient: linear-gradient(90deg,#00A115 0%,#00a115 100%);
+      --whatsapp-gradient: linear-gradient(90deg, #25d366 0%, #128c7e 100%);
+      --glass-bg: rgba(255, 255, 255, 0);
       --glass-blur: blur(10px);
-      --green: #34d399;
+      --green: #000000;
       --turquoise: #5eead4;
       --gold: #ffd94a;
       --danger: #d9303e;
@@ -73,6 +66,7 @@
       animation: gradientBG 6s ease-in-out infinite alternate;
       border-bottom: 1.5px solid #eafff4;
       box-shadow: 0 6px 40px #34d39933;
+      z-index: 10;
     }
     @keyframes gradientBG {
       to {background-position: 100% 100%;}
@@ -144,6 +138,74 @@
       font-size: 1.3em;
       color: var(--green);
       pointer-events: none;
+    }
+    /* WhatsApp Contact Button under search */
+    .whatsapp-contact-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 18px 0 0 0;
+      width: 100%;
+    }
+    .whatsapp-contact-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--whatsapp-gradient);
+      color: #fff;
+      font-size: 1.16em;
+      font-weight: 700;
+      border: none;
+      border-radius: 36px;
+      padding: 10px 26px 10px 20px;
+      box-shadow: 0 2px 16px #25d36644;
+      cursor: pointer;
+      text-decoration: none;
+      transition: box-shadow 0.18s, transform 0.17s, background 0.14s;
+      outline: none;
+      direction: rtl;
+      min-width: 0;
+      will-change: transform, box-shadow;
+      position: relative;
+      z-index: 11;
+      animation: fadeInScale 0.65s cubic-bezier(.23,.7,.52,1.02) 0.1s both;
+    }
+    .whatsapp-contact-btn:focus {
+      outline: 2.5px solid #128c7e;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 3px #25d36633;
+    }
+    .whatsapp-contact-btn:hover {
+      box-shadow: 0 6px 28px #25d36677;
+      transform: scale(1.045);
+      background: linear-gradient(90deg,#26e265 0%,#119e7e 100%);
+    }
+    .whatsapp-contact-btn:active {
+      transform: scale(1.02);
+    }
+    .whatsapp-contact-btn .fa-whatsapp {
+      font-size: 1.45em;
+      color: #fff;
+      margin-left: 0;
+      margin-right: 0;
+      filter: drop-shadow(0 2px 8px #128c7e33);
+    }
+    @keyframes fadeInScale {
+      0% { opacity: 0; transform: scale(0.8) translateY(-12px); }
+      60% { opacity: 1; transform: scale(1.04) translateY(5px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @media (max-width: 600px) {
+      .whatsapp-contact-row {
+        margin: 12px 0 0 0;
+      }
+      .whatsapp-contact-btn {
+        width: 95vw;
+        font-size: 1em;
+        padding: 10px 0 10px 0;
+        border-radius: 17px;
+        justify-content: center;
+      }
     }
     .category-filters {
       display: flex;
@@ -498,6 +560,13 @@
         <input type="text" class="search-bar" id="searchBar" placeholder="ابحث عن منتج..." autocomplete="off">
         <span class="search-icon"><i class="fa fa-search"></i></span>
       </div>
+      <!-- WhatsApp button below search -->
+      <div class="whatsapp-contact-row">
+        <a href="https://wa.me/96170323991" target="_blank" rel="noopener noreferrer" class="whatsapp-contact-btn" aria-label="اتصل بنا عبر واتساب (Contactez-nous sur WhatsApp)" title="اتصل بنا عبر واتساب">
+          <span style="margin-left:8px;"><i class="fab fa-whatsapp" aria-hidden="true"></i></span>
+          <span>اتصل بنا</span>
+        </a>
+      </div>
     </div>
     <div class="category-filters" id="categoryFilters">
       <!-- أزرار التصنيفات ديناميكياً -->
@@ -511,11 +580,11 @@
     <select id="newBikeCategory">
       <option value="">اختر التصنيف</option>
       <option value="vtt">دراجات جبلية</option>
-      <option value="route">دراجات سياحي</option>
+      <option value="route">دراجات طريق</option>
       <option value="trottinette">سكوتر</option>
-      <option value="accessoires">اكسسوارات</option>
+      <option value="accessoires">ملحقات</option>
       <option value="mecanique">ميكانيك</option>
-      <option value="enfant">دراجات ولادي</option>
+      <option value="enfant">دراجات أطفال</option>
     </select>
     <input type="text" id="newBikeDesc" placeholder="الوصف (اختياري)">
     <input type="file" id="newBikeImgFile" accept="image/*">
@@ -552,16 +621,15 @@
   <!-- 🔥 FIREBASE CDN -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
   <script>
     // التصنيفات باللغة العربية
     const CATEGORIES = [
       {id:'vtt',label:'دراجات جبلية',badge:'vtt'},
-      {id:'route',label:'دراجات سياحي',badge:'route'},
+      {id:'route',label:'دراجات طريق',badge:'route'},
       {id:'trottinette',label:'سكوتر',badge:'trottinette'},
-      {id:'accessoires',label:'اكسسوارات',badge:'accessoires'},
+      {id:'accessoires',label:'ملحقات',badge:'accessoires'},
       {id:'mecanique',label:'ميكانيك',badge:'mecanique'},
-      {id:'enfant',label:'دراجات ولادي',badge:'enfant'}
+      {id:'enfant',label:'دراجات أطفال',badge:'enfant'}
     ];
     const CATEGORY_LOOKUP = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
 
@@ -693,7 +761,7 @@
     }
 
     function escapeQuotes(str) {
-      return String(str).replace(/'/g, "\\'").replace(/\"/g, '\\"');
+      return String(str).replace(/'/g, "\\'").replace(/\"/g, '\"');
     }
 
     // --- تكبير الصورة ---
