@@ -818,9 +818,10 @@
             viewsDiv.style.fontWeight = "700";
             viewsDiv.textContent = "👁️ المشاهدات: ...";
 
-            db.ref("stats/views/" + bike.id).on("value", snap=>{
+            db.ref("stats/views/" + bike.id).get().then(snap=>{
                 viewsDiv.textContent = "👁️ المشاهدات: " + (snap.val() || 0);
             });
+
 
             card.appendChild(viewsDiv);
         }
