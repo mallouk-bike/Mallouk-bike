@@ -535,6 +535,7 @@
   </style>
 </head>
 <body>
+  <!-- HEADER -->
   <div class="header">
     <div class="glass">
       <img src="https://i.postimg.cc/kgrvnzGZ/image-2-Photoroom.png" class="logo" alt="شعار مالوك بايك">
@@ -545,17 +546,27 @@
         <span class="search-icon"><i class="fa fa-search"></i></span>
       </div>
       <div class="whatsapp-contact-row">
-        <a href="https://wa.me/96170323991" target="_blank" rel="noopener noreferrer" class="whatsapp-contact-btn" aria-label="اتصل بنا عبر واتساب (Contactez-nous sur WhatsApp)" title="اتصل بنا عبر واتساب">
+        <a href="https://wa.me/96170323991" target="_blank" rel="noopener noreferrer" class="whatsapp-contact-btn">
           <span style="margin-left:8px;"><i class="fab fa-whatsapp" aria-hidden="true"></i></span>
           <span>اتصل بنا</span>
         </a>
       </div>
+      <div id="admin-login-container" style="margin-top:16px;text-align:center;">
+        <button id="login-btn" class="add-btn">تسجيل الدخول كمسؤول</button>
+        <button id="logout-btn" class="add-btn" style="display:none;">تسجيل الخروج</button>
+      </div>
     </div>
     <div class="category-filters" id="categoryFilters"></div>
     <div class="counter" id="counter"></div>
+    <div id="admin-stats" style="display:none;margin:20px auto;max-width:420px;background:#fff;padding:18px;border-radius:15px;box-shadow:0 4px 20px #0002;text-align:center;">
+        <h3>📊 إحصائيات الموقع</h3>
+        <p>👥 عدد الزيارات: <b id="total-visits">0</b></p>
+    </div>
+
   </div>
 
-  <div class="add-bike-form">
+  <!-- FORMULAIRE AJOUT PRODUIT (caché par défaut) -->
+  <div class="add-bike-form" id="add-bike-form" style="display:none;">
     <div class="form-title">إضافة منتج جديد 🚲🛴</div>
     <input type="text" id="newBikeName" placeholder="اسم المنتج">
     <select id="newBikeCategory">
@@ -570,13 +581,15 @@
     </select>
     <input type="text" id="newBikeDesc" placeholder="الوصف (اختياري)">
     <input type="file" id="newBikeImgFile" accept="image/*">
-    <button class="add-btn" id="addBikeBtn" onclick="addBike()"><i class="fa fa-plus-circle"></i>إضافة</button>
+    <button class="add-btn" id="addBikeBtn"><i class="fa fa-plus-circle"></i>إضافة</button>
     <span class="msg" id="addBikeMsg"></span>
   </div>
 
+  <!-- LISTE DES PRODUITS -->
   <div class="bikes-list" id="bikesList"></div>
   <div class="no-result" id="noResult" style="display:none;">لا يوجد منتجات مطابقة لبحثك... 😔</div>
 
+  <!-- POPUP ZOOM IMAGE -->
   <div class="popup-overlay" id="popup">
     <div class="popup-img-box">
       <button class="close-btn" onclick="closePopup()"><i class="fa fa-times"></i></button>
@@ -584,6 +597,7 @@
     </div>
   </div>
 
+  <!-- PARTAGE PRODUIT -->
   <div class="share-overlay" id="share-overlay" onclick="closeShare()"></div>
   <div class="share-popup" id="share-popup">
     <button class="close-btn" onclick="closeShare()"><i class="fa fa-times"></i></button>
@@ -597,141 +611,189 @@
     © Mallouk Bike  – شارك وزرنا مجدداً!
   </div>
 
+  <!-- FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
   <script>
-    // === CONFIGURATION ===
-    const CATEGORIES = [
-      {id:'vtt',label:'دراجات جبلية',badge:'vtt'},
-      {id:'route',label:'دراجات سياحي',badge:'route'},
-      {id:'trottinette',label:'سكوتر',badge:'trottinette'},
-      {id:'accessoires',label:'اكسسوارات',badge:'accessoires'},
-      {id:'malhekat',label:'متفرقات',badge:'malhekat'},
-      {id:'mecanique',label:'ميكانيك',badge:'mecanique'},
-      {id:'enfant',label:'دراجات ولادي',badge:'enfant'}
-    ];
-    const CATEGORY_LOOKUP = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
     const firebaseConfig = {
-      apiKey: "AIzaSyCqr8cCSO_RZRxNWdz75DAJJsHxNLXS9Jc",
-      authDomain: "mallouk-bike.firebaseapp.com",
-      databaseURL: "https://mallouk-bike-default-rtdb.firebaseio.com",
-      projectId: "mallouk-bike",
-      storageBucket: "mallouk-bike.firebasestorage.app",
-      messagingSenderId: "847523992830",
-      appId: "1:847523992830:web:210166ba53b3220bc281af",
-      measurementId: "G-GQF1FPY409"
+    apiKey: "AIzaSyCqr8cCSO_RZRxNWdz75DAJJsHxNLXS9Jc",
+    authDomain: "mallouk-bike.firebaseapp.com",
+    databaseURL: "https://mallouk-bike-default-rtdb.firebaseio.com",
+    projectId: "mallouk-bike",
+    storageBucket: "mallouk-bike.firebasestorage.app",
+    messagingSenderId: "847523992830",
+    appId: "1:847523992830:web:210166ba53b3220bc281af",
+    measurementId: "G-GQF1FPY409"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const ADMIN_PASSWORD = "2026";
+    const auth = firebase.auth();
 
-    // === STATE ===
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+
+
+    function listenStats(){
+        db.ref("stats/visits").on("value", snap=>{
+            document.getElementById("total-visits").textContent = snap.val() || 0;
+        });
+    }
+
+
+    // === STATS : VISITES SITE (1 par session) ===
+    if (!sessionStorage.getItem("site_visited")) {
+    db.ref("stats/visits").transaction(count => (count || 0) + 1);
+    sessionStorage.setItem("site_visited", "1");
+    }
+
+
+
+    const CATEGORIES = [
+    {id:'vtt',label:'دراجات جبلية',badge:'vtt'},
+    {id:'route',label:'دراجات سياحي',badge:'route'},
+    {id:'trottinette',label:'سكوتر',badge:'trottinette'},
+    {id:'accessoires',label:'اكسسوارات',badge:'accessoires'},
+    {id:'malhekat',label:'متفرقات',badge:'malhekat'},
+    {id:'mecanique',label:'ميكانيك',badge:'mecanique'},
+    {id:'enfant',label:'دراجات ولادي',badge:'enfant'}
+    ];
+    const CATEGORY_LOOKUP = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
+
     let allBikes = [];
     let renderTimer = null;
     let currentCategory = 'all';
     let currentSearch = '';
     let highlightBikeId = null;
     let highlightTimeout = null;
+    let isAdmin = false; // <-- AJOUTÉ
 
-    // === INIT ===
+    // INIT
     renderCategoryFilters();
     attachSearchHandler();
-    getHighlightFromUrl(); // Important: do this before first load!
+    getHighlightFromUrl();
     loadBikesRealtime();
     setCategoryFilterActive('all');
 
-    // === FUNCTION: Remove bike_id from URL and reset highlightBikeId ===
-    function removeBikeIdFromUrl() {
-      const url = new URL(window.location.href);
-      if (url.searchParams.has('bike_id')) {
-        url.searchParams.delete('bike_id');
-        window.history.replaceState({}, '', url.pathname + url.search);
-      }
-      highlightBikeId = null;
-    }
+    // === AUTH LOGIC ===
+    const loginBtn = document.getElementById('login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const addBikeForm = document.getElementById('add-bike-form');
 
-    // === CATEGORY FILTERS ===
+    loginBtn.onclick = async () => {
+    const email = prompt("ادخل البريد الالكتروني للمسؤول:");
+    const password = prompt("ادخل كلمة المرور:");
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+        alert("✅ تم تسجيل الدخول كمسؤول!");
+    } catch(e) {
+        alert("⛔ فشل تسجيل الدخول: " + e.message);
+    }
+    };
+
+    logoutBtn.onclick = async () => {
+    await auth.signOut();
+    alert("تم تسجيل الخروج!");
+    };
+
+    // === ON AUTH STATE CHANGE ===
+    auth.onAuthStateChanged(user => {
+    if(user){
+        isAdmin = true;
+        addBikeForm.style.display = 'block';
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+        document.getElementById("admin-stats").style.display = "block";
+        listenStats();
+
+    } else {
+        isAdmin = false;
+        addBikeForm.style.display = 'none';
+        loginBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'none';
+        document.getElementById("admin-stats").style.display = "none";
+    }
+    delayedRender(); // <-- Rerender pour mettre à jour boutons admin
+    });
+
+    // === RENDER & FILTER FUNCTIONS ===
     function renderCategoryFilters() {
-      const filters = document.getElementById('categoryFilters');
-      filters.innerHTML = '';
-      // Always 'all' first
-      const btnAll = document.createElement('button');
-      btnAll.className = 'filter-btn active';
-      btnAll.textContent = 'الكل';
-      btnAll.onclick = () => {
-        filterByCategory('all');
-        removeBikeIdFromUrl();
-      };
-      btnAll.id = 'filter-btn-all';
-      filters.appendChild(btnAll);
-      CATEGORIES.forEach(cat => {
+    const filters = document.getElementById('categoryFilters');
+    filters.innerHTML = '';
+    const btnAll = document.createElement('button');
+    btnAll.className = 'filter-btn active';
+    btnAll.textContent = 'الكل';
+    btnAll.onclick = () => { filterByCategory('all'); removeBikeIdFromUrl(); };
+    btnAll.id = 'filter-btn-all';
+    filters.appendChild(btnAll);
+    CATEGORIES.forEach(cat => {
         const btn = document.createElement('button');
         btn.className = 'filter-btn';
         btn.textContent = cat.label;
         btn.onclick = () => filterByCategory(cat.id);
         btn.id = 'filter-btn-' + cat.id;
         filters.appendChild(btn);
-      });
+    });
     }
     function setCategoryFilterActive(category) {
-      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-      if(category === 'all') {
-        document.getElementById('filter-btn-all').classList.add('active');
-      } else {
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    if(category === 'all') document.getElementById('filter-btn-all').classList.add('active');
+    else {
         const btn = document.getElementById('filter-btn-' + category);
         if(btn) btn.classList.add('active');
-      }
+    }
     }
     function filterByCategory(catId) {
-      currentCategory = catId;
-      setCategoryFilterActive(catId);
-      delayedRender(true);
+    currentCategory = catId;
+    setCategoryFilterActive(catId);
+    delayedRender(true);
     }
 
-    // === SEARCH BAR ===
     function attachSearchHandler() {
-      document.getElementById('searchBar').addEventListener('input', function(e){
+    document.getElementById('searchBar').addEventListener('input', function(){
         currentSearch = this.value.trim().toLowerCase();
         delayedRender();
-      });
+    });
     }
 
-    // === LOAD DATA & RENDER ===
     function loadBikesRealtime() {
-      db.ref('mallouk_bikes').on('value', function(snapshot) {
+    db.ref('mallouk_bikes').on('value', snapshot => {
         const bikesObj = snapshot.val() || {};
         allBikes = Object.entries(bikesObj).map(([bikeId, bike]) => ({...bike, id: bikeId}));
         delayedRender();
-      });
+    });
     }
     function delayedRender(animation = false) {
-      if(renderTimer) clearTimeout(renderTimer);
-      renderTimer = setTimeout(() => renderBikes(animation), 80);
+    if(renderTimer) clearTimeout(renderTimer);
+    renderTimer = setTimeout(() => renderBikes(animation), 80);
     }
+
+    function incrementProductView(bikeId){
+    db.ref("stats/views/" + bikeId).transaction(v => (v || 0) + 1);
+    }
+
+
     function renderBikes(animate = false) {
-      let bikes = allBikes;
-      // Recherche
-      if(currentSearch) {
-        bikes = bikes.filter(bike => {
-          const name = bike.name?.toLowerCase() || '';
-          const desc = bike.desc?.toLowerCase() || '';
-          const cat = bike.category?.toLowerCase() || '';
-          return name.includes(currentSearch) || desc.includes(currentSearch) || (CATEGORY_LOOKUP[cat]?.label.toLowerCase().includes(currentSearch));
+    let bikes = allBikes;
+    if(currentSearch){
+        bikes = bikes.filter(bike=>{
+        const name = bike.name?.toLowerCase() || '';
+        const desc = bike.desc?.toLowerCase() || '';
+        const cat = bike.category?.toLowerCase() || '';
+        return name.includes(currentSearch) || desc.includes(currentSearch) || (CATEGORY_LOOKUP[cat]?.label.toLowerCase().includes(currentSearch));
         });
-      }
-      // Filtre catégorie
-      if(currentCategory !== 'all') {
-        bikes = bikes.filter(bike => bike.category === currentCategory);
-      }
-      // Tri par date/id desc
-      bikes = bikes.slice().sort((a,b) => b.id - a.id);
-      // Affichage
-      const list = document.getElementById('bikesList');
-      list.innerHTML = '';
-      document.getElementById('counter').textContent = bikes.length ? (`${bikes.length} منتج${bikes.length === 1 ? '' : 'ات'} معروضة`) : '';
-      document.getElementById('noResult').style.display = bikes.length ? 'none' : 'block';
-      if(!bikes.length) return;
-      bikes.forEach((bike,i) => {
+    }
+    if(currentCategory !== 'all') bikes = bikes.filter(bike => bike.category === currentCategory);
+    bikes = bikes.slice().sort((a,b) => b.id - a.id);
+
+    const list = document.getElementById('bikesList');
+    list.innerHTML = '';
+    document.getElementById('counter').textContent = bikes.length ? (`${bikes.length} منتج${bikes.length === 1 ? '' : 'ات'} معروضة`) : '';
+    document.getElementById('noResult').style.display = bikes.length ? 'none' : 'block';
+    if(!bikes.length) return;
+
+    bikes.forEach((bike,i)=>{
         const card = document.createElement('div');
         card.className = 'bike-card';
         card.setAttribute('data-id', bike.id);
@@ -739,176 +801,138 @@
         let badgeClass = CATEGORY_LOOKUP[bike.category]?.badge || '';
         let badgeLabel = CATEGORY_LOOKUP[bike.category]?.label || bike.category || '';
         card.innerHTML = `
-          <span class="badge ${badgeClass}">${badgeLabel}</span>
-          <img src="${bike.img}" class="bike-img" alt="${bike.name}" data-name="${bike.name}" data-id="${bike.id}">
-          <div class="bike-name">${bike.name}</div>
-          <div class="bike-desc">${bike.desc ? bike.desc : ''}</div>
-          <div class="card-btns">
+        <span class="badge ${badgeClass}">${badgeLabel}</span>
+        <img src="${bike.img}" class="bike-img" alt="${bike.name}" data-name="${bike.name}" data-id="${bike.id}">
+        <div class="bike-name">${bike.name}</div>
+        <div class="bike-desc">${bike.desc ? bike.desc : ''}</div>
+        <div class="card-btns">
             <button class="share-btn" onclick="shareBikeById('${bike.id}')"><i class="fa fa-share-alt"></i>مشاركة</button>
-            <button class="delete-btn" onclick="deleteBike('${bike.id}')"><i class="fa fa-trash"></i>حذف</button>
-          </div>
+            <button class="delete-btn" style="display:${isAdmin ? 'inline-flex':'none'};" onclick="deleteBike('${bike.id}')"><i class="fa fa-trash"></i>حذف</button>
+        </div>
         `;
+        // === VUES PRODUIT (ADMIN SEULEMENT) ===
+        if(isAdmin){
+            const viewsDiv = document.createElement("div");
+            viewsDiv.style.marginTop = "8px";
+            viewsDiv.style.fontSize = "0.9em";
+            viewsDiv.style.fontWeight = "700";
+            viewsDiv.textContent = "👁️ المشاهدات: ...";
+
+            db.ref("stats/views/" + bike.id).on("value", snap=>{
+                viewsDiv.textContent = "👁️ المشاهدات: " + (snap.val() || 0);
+            });
+
+            card.appendChild(viewsDiv);
+        }
+
         list.appendChild(card);
-      });
-      attachZoom();
-      highlightBikeIfNeeded();
+    });
+    attachZoom();
+    highlightBikeIfNeeded();
     }
 
-    // === PRODUCT ZOOM ===
+    // === ZOOM IMAGE ===
     const popup = document.getElementById('popup');
     const popupImg = document.getElementById('popup-img');
     function attachZoom() {
-      document.querySelectorAll('.bike-img').forEach(img => {
+    document.querySelectorAll('.bike-img').forEach(img => {
         img.onclick = function() {
-          popupImg.src = this.src;
-          popup.classList.add('active');
+            const bikeId = this.dataset.id;
+            incrementProductView(bikeId);
+            popupImg.src = this.src;
+            popup.classList.add('active');
         }
-      });
-    }
-    function closePopup() {
-      popup.classList.remove('active');
-      popupImg.src = "";
-    }
-    window.closePopup = closePopup;
-    popup.addEventListener('click',function(e){ if(e.target === popup) closePopup(); });
-    document.addEventListener('keydown',function(e){
-      if(e.key === 'Escape'){closePopup();closeShare();}
+
     });
-
-    // === HIGHLIGHT PRODUCT BY URL (?bike_id=...) ===
-    function getHighlightFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      highlightBikeId = params.get('bike_id');
-      if (highlightBikeId) {
-        // Réinitialise le filtre sur "الكل" pour garantir la visibilité
-        currentCategory = 'all';
-        setCategoryFilterActive('all');
-      }
     }
-    function highlightBikeIfNeeded() {
-      if (!highlightBikeId) return;
-      // On annule tout highlight précédent
-      if (highlightTimeout) {
-        clearTimeout(highlightTimeout);
-        highlightTimeout = null;
-      }
-      setTimeout(() => {
-        const targetCard = Array.from(document.querySelectorAll('.bike-card')).find(card => card.getAttribute('data-id') === highlightBikeId);
-        if (targetCard) {
-          targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          targetCard.classList.add('product-highlight');
-          // Retire la surbrillance et le paramètre bike_id après 3s
-          highlightTimeout = setTimeout(() => {
-            targetCard.classList.remove('product-highlight');
-            removeBikeIdFromUrl();
-          }, 3000);
-        } else {
-          // Si introuvable (filtre ou suppression), retire quand même l'URL
-          highlightTimeout = setTimeout(removeBikeIdFromUrl, 3000);
-        }
-      }, 400);
-    }
+    function closePopup() { popup.classList.remove('active'); popupImg.src=""; }
+    window.closePopup = closePopup;
+    popup.addEventListener('click', e => { if(e.target === popup) closePopup(); });
+    document.addEventListener('keydown', e => { if(e.key==='Escape'){closePopup();closeShare();} });
 
-    // === SHARING LOGIC ===
-    function shareBikeById(bikeId) {
-      const url = window.location.origin + window.location.pathname + '?bike_id=' + encodeURIComponent(bikeId);
-      // Web Share API si dispo
-      if (navigator.share) {
-        const bike = allBikes.find(b => b.id == bikeId);
+    // === SHARE ===
+    function shareBikeById(bikeId){
+    const url = window.location.origin + window.location.pathname + '?bike_id=' + encodeURIComponent(bikeId);
+    if(navigator.share){
+        const bike = allBikes.find(b=>b.id==bikeId);
         const title = bike?.name || 'منتج من Mallouk Bike';
         const text = bike?.desc ? bike.desc + ' - من Mallouk Bike' : 'من Mallouk Bike';
-        navigator.share({
-          title,
-          text,
-          url
-        }).catch(() => {
-          // Fallback si refusé
-          openSharePopup(url);
-        });
-      } else {
-        openSharePopup(url);
-      }
+        navigator.share({title,text,url}).catch(()=>{openSharePopup(url);});
+    } else openSharePopup(url);
     }
-    function openSharePopup(url) {
-      document.getElementById('share-popup').classList.add('active');
-      document.getElementById('share-overlay').classList.add('active');
-      document.getElementById('share-link').value = url;
-      document.getElementById('copied-msg').classList.remove('active');
-      document.getElementById('copy-share-btn').onclick = function() {
+    function openSharePopup(url){
+    document.getElementById('share-popup').classList.add('active');
+    document.getElementById('share-overlay').classList.add('active');
+    document.getElementById('share-link').value = url;
+    document.getElementById('copied-msg').classList.remove('active');
+    document.getElementById('copy-share-btn').onclick = function() {
         let input = document.getElementById('share-link');
         input.select();
         input.setSelectionRange(0, 99999);
         document.execCommand('copy');
         document.getElementById('copied-msg').classList.add('active');
-        setTimeout(function() {
-          document.getElementById('copied-msg').classList.remove('active');
-        }, 1400);
-      }
+        setTimeout(()=>{document.getElementById('copied-msg').classList.remove('active');},1400);
     }
-    function closeShare() {
-      document.getElementById('share-popup').classList.remove('active');
-      document.getElementById('share-overlay').classList.remove('active');
     }
+    function closeShare(){ document.getElementById('share-popup').classList.remove('active'); document.getElementById('share-overlay').classList.remove('active'); }
     window.closeShare = closeShare;
 
-    // === ADMIN ADD/DELETE LOGIC ===
-    function demandeMotDePasse(action) {
-      let saisie = prompt(`يرجى إدخال كلمة المرور لـ ${action} :`);
-      return saisie === ADMIN_PASSWORD;
-    }
-    function addBike() {
-      let msg = document.getElementById('addBikeMsg');
-      let btn = document.getElementById('addBikeBtn');
-      if (!demandeMotDePasse("إضافة منتج")) {
-        msg.textContent = "⛔ كلمة المرور غير صحيحة.";
-        msg.style.color = "#d9303e";
-        setTimeout(()=>{msg.textContent="";}, 2100);
-        return;
-      }
-      const name = document.getElementById('newBikeName').value.trim();
-      const category = document.getElementById('newBikeCategory').value;
-      const desc = document.getElementById('newBikeDesc').value.trim();
-      const fileInput = document.getElementById('newBikeImgFile');
-      const file = fileInput.files[0];
-      if (!name || !category || !file) {
-        msg.textContent = "⚠️ يرجى تعبئة جميع الحقول!";
-        msg.style.color = "#d9303e";
-        return;
-      }
-      btn.disabled = true;
-      btn.innerHTML = '<span class="loading"></span>جاري الإضافة...';
-      msg.textContent = "";
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        let imgData = e.target.result;
-        const bikeId = Date.now() + Math.floor(Math.random()*10000);
-        db.ref('mallouk_bikes/' + bikeId).set({ name, category, desc, img: imgData }, function(error){
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fa fa-plus-circle"></i>إضافة';
-          if(!error){
-            msg.textContent = "✅ تم إضافة المنتج!";
-            msg.style.color = "#16a085";
-            setTimeout(()=>{msg.textContent="";}, 1800);
-            document.getElementById('newBikeName').value = "";
-            document.getElementById('newBikeCategory').value = "";
-            document.getElementById('newBikeDesc').value = "";
-            fileInput.value = "";
-          } else {
-            msg.textContent = "⛔ حدث خطأ أثناء الإضافة!";
-            msg.style.color = "#d9303e";
-          }
+    // === ADD/DELETE ===
+    document.getElementById('addBikeBtn').onclick = function(){
+    const msg = document.getElementById('addBikeMsg');
+    const btn = this;
+    const name = document.getElementById('newBikeName').value.trim();
+    const category = document.getElementById('newBikeCategory').value;
+    const desc = document.getElementById('newBikeDesc').value.trim();
+    const fileInput = document.getElementById('newBikeImgFile');
+    const file = fileInput.files[0];
+    if(!name||!category||!file){ msg.textContent="⚠️ يرجى تعبئة جميع الحقول!"; msg.style.color="#d9303e"; return; }
+    btn.disabled=true; btn.innerHTML='<span class="loading"></span>جاري الإضافة...';
+    msg.textContent="";
+    const reader = new FileReader();
+    reader.onload = e=>{
+        const imgData = e.target.result;
+        const bikeId = Date.now()+Math.floor(Math.random()*10000);
+        db.ref('mallouk_bikes/'+bikeId).set({name,category,desc,img:imgData},error=>{
+        btn.disabled=false; btn.innerHTML='<i class="fa fa-plus-circle"></i>إضافة';
+        if(!error){
+            msg.textContent="✅ تم إضافة المنتج!"; msg.style.color="#16a085";
+            setTimeout(()=>{msg.textContent="";},1800);
+            document.getElementById('newBikeName').value="";
+            document.getElementById('newBikeCategory').value="";
+            document.getElementById('newBikeDesc').value="";
+            fileInput.value="";
+        } else { msg.textContent="❌ فشل إضافة المنتج"; msg.style.color="#d9303e"; }
         });
-      };
-      reader.readAsDataURL(file);
+    };
+    reader.readAsDataURL(file);
     }
-    function deleteBike(bikeId) {
-      if (!demandeMotDePasse("حذف المنتج")) {
-        alert("⛔ كلمة المرور غير صحيحة. تم إلغاء الحذف.");
-        return;
-      }
-      if (confirm("🗑️ هل تريد حذف هذا المنتج؟")) {
-        db.ref('mallouk_bikes/' + bikeId).remove();
-      }
+
+    window.deleteBike = function(bikeId){
+    if(confirm('هل أنت متأكد من حذف هذا المنتج؟')) db.ref('mallouk_bikes/'+bikeId).remove();
+    }
+
+    // === HIGHLIGHT BIKE ===
+    function getHighlightFromUrl(){
+    const urlParams = new URLSearchParams(window.location.search);
+    highlightBikeId = urlParams.get('bike_id');
+    }
+    function highlightBikeIfNeeded(){
+        if(highlightBikeId){
+            incrementProductView(highlightBikeId);
+
+            const el = document.querySelector(`.bike-card[data-id='${highlightBikeId}']`);
+            if(el){
+            el.style.border='2px solid #ffd94a';
+            el.scrollIntoView({behavior:'smooth',block:'center'});
+            setTimeout(()=>{if(el) el.style.border='1px solid #ccc';},4500);
+            }
+    }
+    }
+    function removeBikeIdFromUrl(){
+    const url = new URL(window.location);
+    url.searchParams.delete('bike_id');
+    window.history.replaceState({}, '', url);
     }
   </script>
 </body>
