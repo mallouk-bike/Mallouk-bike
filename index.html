@@ -588,6 +588,9 @@
     <span class="msg" id="addBikeMsg"></span>
   </div>
 
+  <div id="loadingMessage" style="text-align:center;margin-top:50px;font-size:1.2em;color:#34d399;">جارٍ تحميل المنتجات...</div>
+
+
   <!-- LISTE DES PRODUITS -->
   <div class="bikes-list" id="bikesList"></div>
   <div class="no-result" id="noResult" style="display:none;">لا يوجد منتجات مطابقة لبحثك... 😔</div>
@@ -611,13 +614,14 @@
   </div>
 
   <div class="footer">
-    © Mallouk Bike  – شارك وزرنا مجدداً!
+    © Mallouk Bike 2026 – شارك وزرنا مجدداً!
   </div>
 
   <!-- FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -650,7 +654,6 @@
     db.ref("stats/visits").transaction(count => (count || 0) + 1);
     sessionStorage.setItem("site_visited", "1");
     }
-
 
 
     const CATEGORIES = [
@@ -764,6 +767,9 @@
     db.ref('mallouk_bikes').on('value', snapshot => {
         const bikesObj = snapshot.val() || {};
         allBikes = Object.entries(bikesObj).map(([bikeId, bike]) => ({...bike, id: bikeId}));
+
+        document.getElementById('loadingMessage').style.display = 'none';
+        
         delayedRender();
     });
     }
@@ -789,8 +795,6 @@
             }
         });
     }
-
-
 
     function renderBikes(animate = false) {
     let bikes = allBikes;
@@ -820,7 +824,7 @@
         let badgeLabel = CATEGORY_LOOKUP[bike.category]?.label || bike.category || '';
         card.innerHTML = `
         <span class="badge ${badgeClass}">${badgeLabel}</span>
-        <img src="${bike.img}" class="bike-img" alt="${bike.name}" data-name="${bike.name}" data-id="${bike.id}">
+        <img data-src="${bike.img}" class="bike-img lazy" alt="${bike.name}" data-id="${bike.id}">
         <div class="bike-name">${bike.name}</div>
         <div class="bike-desc">${bike.desc ? bike.desc : ''}</div>
         <div class="card-btns">
@@ -844,8 +848,11 @@
             card.appendChild(viewsDiv);
         }
 
-
         list.appendChild(card);
+        const img = card.querySelector('img.lazy');
+        img.src = img.dataset.src;  // lazy load
+        img.onload = () => img.classList.remove('lazy');
+
     });
     attachZoom();
     highlightBikeIfNeeded();
@@ -906,27 +913,52 @@
     const desc = document.getElementById('newBikeDesc').value.trim();
     const fileInput = document.getElementById('newBikeImgFile');
     const file = fileInput.files[0];
-    if(!name||!category||!file){ msg.textContent="⚠️ يرجى تعبئة جميع الحقول!"; msg.style.color="#d9303e"; return; }
-    btn.disabled=true; btn.innerHTML='<span class="loading"></span>جاري الإضافة...';
-    msg.textContent="";
-    const reader = new FileReader();
-    reader.onload = e=>{
-        const imgData = e.target.result;
-        const bikeId = Date.now()+Math.floor(Math.random()*10000);
-        db.ref('mallouk_bikes/'+bikeId).set({name,category,desc,img:imgData},error=>{
-        btn.disabled=false; btn.innerHTML='<i class="fa fa-plus-circle"></i>إضافة';
-        if(!error){
-            msg.textContent="✅ تم إضافة المنتج!"; msg.style.color="#16a085";
-            setTimeout(()=>{msg.textContent="";},1800);
-            document.getElementById('newBikeName').value="";
-            document.getElementById('newBikeCategory').value="";
-            document.getElementById('newBikeDesc').value="";
-            fileInput.value="";
-        } else { msg.textContent="❌ فشل إضافة المنتج"; msg.style.color="#d9303e"; }
-        });
-    };
-    reader.readAsDataURL(file);
+
+    if(!name || !category || !file){
+        msg.textContent = "⚠️ يرجى تعبئة جميع الحقول!";
+        msg.style.color = "#d9303e";
+        return;
     }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading"></span>جاري الإضافة...';
+    msg.textContent = "";
+
+    // === UPLOAD IMAGE TO FIREBASE STORAGE ===
+    const storageRef = firebase.storage().ref('bikes/' + Date.now() + '_' + file.name);
+    storageRef.put(file).then(snapshot => {
+        snapshot.ref.getDownloadURL().then(url => {
+            const bikeId = Date.now() + Math.floor(Math.random()*10000);
+            db.ref('mallouk_bikes/' + bikeId).set({
+                name,
+                category,
+                desc,
+                img: url
+            }, error => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa fa-plus-circle"></i>إضافة';
+                if(!error){
+                    msg.textContent = "✅ تم إضافة المنتج!";
+                    msg.style.color = "#16a085";
+                    setTimeout(()=>{ msg.textContent = ""; }, 1800);
+                    document.getElementById('newBikeName').value = "";
+                    document.getElementById('newBikeCategory').value = "";
+                    document.getElementById('newBikeDesc').value = "";
+                    fileInput.value = "";
+                } else {
+                    msg.textContent = "❌ فشل إضافة المنتج";
+                    msg.style.color = "#d9303e";
+                }
+            });
+        });
+    }).catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-plus-circle"></i>إضافة';
+        msg.textContent = "❌ خطأ أثناء رفع الصورة!";
+        msg.style.color = "#d9303e";
+        console.error(err);
+    });
+}
 
     window.deleteBike = function(bikeId){
     if(confirm('هل أنت متأكد من حذف هذا المنتج؟')) db.ref('mallouk_bikes/'+bikeId).remove();
