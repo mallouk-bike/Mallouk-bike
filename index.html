@@ -532,6 +532,26 @@
     .share-popup .copied.active{display:block;}
     @media (max-width:800px){.bikes-list{grid-template-columns:1fr;}.badge{right:9px;top:9px;} .add-bike-form{padding: 18px 7px;} .footer{font-size:0.97em;} .bike-name{font-size:1em;} .bike-card{padding:18px 7px 15px;} }
     @media (max-width:520px){.header{padding:24px 4px 11px;} .glass{padding:10px 7px;} .search-bar-box{max-width:99vw;} }
+
+
+    #migrate-container {
+      display: block !important;  /* toujours visible */
+      text-align: center;
+      margin: 20px 0;
+      z-index: 50;                /* au-dessus des autres éléments si nécessaire */
+    }
+
+    #migrate-container .add-btn {
+      display: inline-flex !important;  /* s'assure que le bouton est visible */
+      background: var(--gradient);
+      color: #fff;
+      padding: 10px 24px;
+      font-weight: 700;
+      font-size: 1.1em;
+      border-radius: 11px;
+      cursor: pointer;
+      box-shadow: 0 2px 16px #34d39944;
+    }
   </style>
   
   <link rel="manifest" href="manifest.json">
