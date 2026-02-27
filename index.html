@@ -532,26 +532,6 @@
     .share-popup .copied.active{display:block;}
     @media (max-width:800px){.bikes-list{grid-template-columns:1fr;}.badge{right:9px;top:9px;} .add-bike-form{padding: 18px 7px;} .footer{font-size:0.97em;} .bike-name{font-size:1em;} .bike-card{padding:18px 7px 15px;} }
     @media (max-width:520px){.header{padding:24px 4px 11px;} .glass{padding:10px 7px;} .search-bar-box{max-width:99vw;} }
-
-
-    #migrate-container {
-      display: block !important;  /* toujours visible */
-      text-align: center;
-      margin: 20px 0;
-      z-index: 50;                /* au-dessus des autres éléments si nécessaire */
-    }
-
-    #migrate-container .add-btn {
-      display: inline-flex !important;  /* s'assure que le bouton est visible */
-      background: var(--gradient);
-      color: #fff;
-      padding: 10px 24px;
-      font-weight: 700;
-      font-size: 1.1em;
-      border-radius: 11px;
-      cursor: pointer;
-      box-shadow: 0 2px 16px #34d39944;
-    }
   </style>
   
   <link rel="manifest" href="manifest.json">
@@ -578,7 +558,6 @@
         <button id="login-btn" class="add-btn">تسجيل الدخول كمسؤول</button>
         <button id="logout-btn" class="add-btn" style="display:none;">تسجيل الخروج</button>
       </div>
-
     </div>
     <div class="category-filters" id="categoryFilters"></div>
     <div class="counter" id="counter"></div>
@@ -587,14 +566,6 @@
         <p>👥 عدد الزيارات: <b id="total-visits">0</b></p>
     </div>
 
-    <!-- BOUTON TOUJOURS VISIBLE -->
-    <div id="migrate-container" style="text-align:center;margin:20px 0;">
-      <button onclick="migrateImages()" class="add-btn">
-        🔄 ترحيل الصور إلى Storage
-      </button>
-    </div>
-
-    
   </div>
 
   <!-- FORMULAIRE AJOUT PRODUIT (caché par défaut) -->
@@ -1015,59 +986,6 @@
     url.searchParams.delete('bike_id');
     window.history.replaceState({}, '', url);
     }
-
-
-
-
-    async function migrateImages(){
-
-      if(!confirm("⚠️ هل أنت متأكد؟ سيتم نقل كل الصور إلى Storage")) return;
-  
-      const snapshot = await db.ref("mallouk_bikes").get();
-  
-      if(!snapshot.exists()){
-          alert("لا يوجد منتجات");
-          return;
-      }
-  
-      const bikes = snapshot.val();
-      let migrated = 0;
-  
-      for(const id in bikes){
-  
-          const bike = bikes[id];
-  
-          if(bike.img && bike.img.startsWith("data:image")){
-  
-              console.log("Migration:", id);
-  
-              try{
-                  // Convert base64 → Blob
-                  const response = await fetch(bike.img);
-                  const blob = await response.blob();
-  
-                  // Upload vers Storage
-                  const storageRef = firebase.storage().ref("bikes/" + id + ".jpg");
-                  await storageRef.put(blob);
-  
-                  // Get URL
-                  const url = await storageRef.getDownloadURL();
-  
-                  // Update database
-                  await db.ref("mallouk_bikes/" + id).update({
-                      img: url
-                  });
-  
-                  migrated++;
-  
-              } catch(e){
-                  console.error("Erreur produit:", id, e);
-              }
-          }
-      }
-  
-      alert("✅ Migration terminée ! Images migrées: " + migrated);
-  }
   </script>
   
   <script>
