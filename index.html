@@ -558,6 +558,13 @@
         <button id="login-btn" class="add-btn">تسجيل الدخول كمسؤول</button>
         <button id="logout-btn" class="add-btn" style="display:none;">تسجيل الخروج</button>
       </div>
+
+      <div style="text-align:center;margin-top:10px;display:block;" id="migrate-container">
+      <button onclick="migrateImages()" class="add-btn">
+        🔄 ترحيل الصور إلى Storage
+      </button>
+    </div>
+
     </div>
     <div class="category-filters" id="categoryFilters"></div>
     <div class="counter" id="counter"></div>
@@ -566,12 +573,7 @@
         <p>👥 عدد الزيارات: <b id="total-visits">0</b></p>
     </div>
 
-    <div style="text-align:center;margin-top:10px;display:block;" id="migrate-container">
-      <button onclick="migrateImages()" class="add-btn">
-        🔄 ترحيل الصور إلى Storage
-      </button>
-    </div>
-
+    
   </div>
 
   <!-- FORMULAIRE AJOUT PRODUIT (caché par défaut) -->
