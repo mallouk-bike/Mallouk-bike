@@ -559,11 +559,11 @@
         <button id="logout-btn" class="add-btn" style="display:none;">تسجيل الخروج</button>
       </div>
 
-      <div style="text-align:center;margin-top:10px;display:block;" id="migrate-container">
-      <button onclick="migrateImages()" class="add-btn">
-        🔄 ترحيل الصور إلى Storage
-      </button>
-    </div>
+      <div id="migrate-container" style="text-align:center;margin:20px 0;">
+        <button onclick="migrateImages()" class="add-btn">
+          🔄 ترحيل الصور إلى Storage
+        </button>
+      </div>
 
     </div>
     <div class="category-filters" id="categoryFilters"></div>
@@ -719,7 +719,6 @@
         loginBtn.style.display = 'none';
         logoutBtn.style.display = 'inline-block';
         document.getElementById("admin-stats").style.display = "block";
-        document.getElementById("migrate-container").style.display = "block";
         listenStats();
 
     } else {
@@ -728,7 +727,6 @@
         loginBtn.style.display = 'inline-block';
         logoutBtn.style.display = 'none';
         document.getElementById("admin-stats").style.display = "none";
-        document.getElementById("migrate-container").style.display = "block";
     }
     delayedRender(); // <-- Rerender pour mettre à jour boutons admin
     });
